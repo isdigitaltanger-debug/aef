@@ -1,12 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
-import api from "../lib/api";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, Loader2, Send, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import api, { apiError } from "../lib/api";
 
 export default function Integrations() {
+  const qc = useQueryClient();
+  const [testTo, setTestTo] = useState("");
+  const [sending, setSending] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ["admin-integrations"],
     queryFn: () => api.get("/admin/integrations").then((r) => r.data),
   });
+
+  const sendTest = async () => {
+    setSending(true);
+    try {
+      const { data: r } = await api.post("/admin/email/test", { to: testTo || null, with_client_copy: true });
+      toast.success(`E-mail test envoyé à ${r.to} (${r.reference}) — vérifiez la boîte de réception et les spams.`);
+      qc.invalidateQueries({ queryKey: ["admin-integrations"] });
+    } catch (e) {
+      toast.error(apiError(e));
+    } finally {
+      setSending(false);
+    }
+  };
 
   if (isLoading || !data) return <div className="flex items-center gap-2 text-brand-ink/60"><Loader2 className="h-4 w-4 animate-spin" /> Chargement…</div>;
 
@@ -36,6 +54,21 @@ export default function Integrations() {
             <p className="text-sm text-brand-ink/70 leading-relaxed">{c.detail}</p>
           </div>
         ))}
+      </div>
+
+      <div className="card p-6 mb-10" data-testid="integration-email-test">
+        <p className="eyebrow mb-2">E-mail test — dossier fictif complet</p>
+        <p className="text-sm text-brand-ink/70 mb-4">
+          Envoie un dossier de démonstration (fiche équipe + PDF, puis accusé de réception « client » + PDF récapitulatif).
+          Destinataire interne : <strong>{data.email.internal_email || "—"}</strong>. Laissez vide pour l'utiliser, ou indiquez une autre adresse.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <input type="email" value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder={data.email.internal_email} className="input-base !w-auto flex-1 min-w-[240px]" data-testid="email-test-to" />
+          <button onClick={sendTest} disabled={sending || !data.email.configured} className="btn-primary !py-2.5 !text-sm disabled:opacity-60" data-testid="email-test-send">
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Envoyer le mail test
+          </button>
+        </div>
+        {!data.email.configured && <p className="text-xs text-amber-700 mt-3" data-testid="email-test-disabled">Gmail SMTP non configuré : renseignez le mot de passe d'application dans le fichier .env du serveur.</p>}
       </div>
 
       <div className="card p-6" data-testid="integration-journal">

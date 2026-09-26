@@ -25,6 +25,12 @@ import { MentionsLegales, Confidentialite, ConditionsUtilisation } from "./pages
 import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 import AdminApp from "./admin/AdminApp";
+import useTracking from "./hooks/useTracking";
+
+function Tracking() {
+  useTracking();
+  return null;
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -56,6 +62,7 @@ function PublicLayout() {
   return (
     <>
       <SmoothScroll />
+      <Tracking />
       <Header />
       <main id="main-content">
         <Outlet />

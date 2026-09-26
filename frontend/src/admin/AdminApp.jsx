@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, Navigate, NavLink, Route, Routes } from "react-router-dom";
-import { BarChart3, Building2, FileText, ExternalLink, LayoutDashboard, Loader2, LogOut, Mail, Plug, ShieldCheck, TestTube } from "lucide-react";
+import { BarChart3, Building2, FileText, ExternalLink, LayoutDashboard, LineChart, Loader2, LogOut, Mail, Plug, ShieldCheck, TestTube } from "lucide-react";
 import api, { apiError } from "../lib/api";
 import Dashboard from "./Dashboard";
 import Leads from "./Leads";
@@ -11,6 +11,7 @@ import Regles from "./Regles";
 import Messages from "./Messages";
 import Integrations from "./Integrations";
 import TestLead from "./TestLead";
+import Stats from "./Stats";
 
 const AuthCtx = { user: null, setUser: null };
 export const useAuth = () => AuthCtx;
@@ -18,6 +19,7 @@ export const useAuth = () => AuthCtx;
 const NAV = [
   { to: "/administration", end: true, label: "Tableau de bord", icon: LayoutDashboard, roles: ["agent", "editor", "admin"], id: "admin-nav-dashboard" },
   { to: "/administration/leads", label: "Leads", icon: BarChart3, roles: ["agent", "editor", "admin"], id: "admin-nav-leads" },
+  { to: "/administration/statistiques", label: "Statistiques de visite", icon: LineChart, roles: ["agent", "editor", "admin"], id: "admin-nav-stats" },
   { to: "/administration/articles", label: "Articles", icon: FileText, roles: ["editor", "admin"], id: "admin-nav-articles" },
   { to: "/administration/partenaires", label: "Partenaires", icon: Building2, roles: ["admin"], id: "admin-nav-partners" },
   { to: "/administration/regles", label: "Règles de qualification", icon: ShieldCheck, roles: ["admin"], id: "admin-nav-rules" },
@@ -64,6 +66,7 @@ export default function AdminApp() {
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<Leads />} />
         <Route path="leads/:id" element={<LeadDetail />} />
+        <Route path="statistiques" element={<Stats />} />
         <Route path="articles" element={<Articles />} />
         <Route path="articles/:id" element={<ArticleEdit />} />
         <Route path="partenaires" element={<Partners />} />
@@ -260,6 +263,8 @@ function AdminLayout() {
             <Route index element={<Dashboard />} />
             <Route path="leads" element={<Leads />} />
             <Route path="leads/:id" element={<LeadDetail />} />
+            <Route path="statistiques" element={<Stats />} />
+        <Route path="statistiques" element={<Stats />} />
             <Route path="articles" element={<Articles />} />
             <Route path="articles/:id" element={<ArticleEdit />} />
             <Route path="partenaires" element={<Partners />} />

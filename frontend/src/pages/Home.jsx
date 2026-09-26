@@ -8,6 +8,7 @@ import Seo from "../lib/seo";
 import KineticTitle from "../components/KineticTitle";
 import Marquee from "../components/Marquee";
 import Reveal from "../components/Reveal";
+import BackdropIllustration from "../components/BackdropIllustration";
 import EligibilityForm from "../wizard/EligibilityForm";
 import api from "../lib/api";
 import { AIDS } from "../content/aides";
@@ -100,7 +101,7 @@ export default function Home() {
                 className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-brand-ink/70"
               >
                 <span className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-brand-green" /> Gratuit et sans engagement</span>
-                <span className="flex items-center gap-2"><ShieldIcon /> Non affilié à l'administration</span>
+                <span className="flex items-center gap-2"><ShieldIcon /> Plateforme privée</span>
               </motion.div>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.85, duration: 0.7 }} className="mt-8 hidden lg:flex items-center gap-6">
                 <div className="border-l-2 border-brand-gold pl-4">
@@ -147,8 +148,9 @@ export default function Home() {
       </section>
 
       {/* ================= AIDES ================= */}
-      <section className="section" data-testid="aides-section">
-        <div className="container-x">
+      <section className="section relative overflow-hidden" data-testid="aides-section">
+        <BackdropIllustration src="/illustrations/maison-solaire.jpg" side="right" testid="backdrop-aides" />
+        <div className="container-x relative">
           <Reveal>
             <div className="flex flex-wrap items-end justify-between gap-4 mb-10">
               <div>
@@ -193,8 +195,9 @@ export default function Home() {
       <Marquee items={["Système solaire combiné", "Pompe à chaleur", "PAC + solaire thermique", "Isolation", "Étude gratuite", "Sans engagement", "Plateforme privée", "Conseils indépendants"]} />
 
       {/* ================= COMMENT ÇA MARCHE ================= */}
-      <section className="section !pt-20" data-testid="how-it-works">
-        <div className="container-x">
+      <section className="section !pt-20 relative overflow-hidden" data-testid="how-it-works">
+        <BackdropIllustration src="/illustrations/pompe-chaleur.jpg" side="left" testid="backdrop-how" />
+        <div className="container-x relative">
           <Reveal>
             <p className="eyebrow mb-3">Comment ça marche</p>
             <h2 className="h-serif text-2xl sm:text-3xl lg:text-4xl font-semibold mb-12 max-w-2xl">
@@ -297,11 +300,11 @@ export default function Home() {
               <div className="relative max-w-2xl">
                 <p className="text-xs uppercase tracking-[0.22em] font-semibold text-white/70 mb-4">Notre rôle, en toute transparence</p>
                 <h2 className="font-serif text-2xl sm:text-4xl font-semibold leading-tight mb-5">
-                  Une plateforme privée, indépendante de l'administration
+                  Une plateforme privée, à votre service
                 </h2>
                 <p className="text-white/80 leading-relaxed mb-8">
-                  Aides Énergie France n'est ni un site de l'État, ni France Rénov'. Nous sommes une
-                  plateforme privée d'information et de mise en relation : nous vous aidons à
+                  Aides Énergie France est une plateforme privée d'information et de mise en
+                  relation : nous vous aidons à
                   comprendre les aides, à préparer votre dossier et, si votre projet correspond, à
                   être mis en relation avec un professionnel pour une étude gratuite. Nous ne
                   délivrons aucune aide et ne promettons aucun montant : les barèmes officiels

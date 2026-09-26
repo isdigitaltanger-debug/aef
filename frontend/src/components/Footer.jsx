@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import BackdropIllustration from "./BackdropIllustration";
 
 const COLS = [
   {
@@ -46,10 +47,11 @@ const COLS = [
 
 export default function Footer() {
   return (
-    <footer className="bg-white" data-testid="site-footer">
+    <footer className="bg-white relative overflow-hidden" data-testid="site-footer">
       <div className="h-1.5 bg-brand-green" aria-hidden="true" />
       <div className="h-[3px] bg-brand-gold/80" aria-hidden="true" />
-      <div className="container-x py-14 sm:py-16">
+      <BackdropIllustration src="/illustrations/famille-chaleur.jpg" side="right" testid="backdrop-footer" className="hidden md:block" />
+      <div className="container-x py-14 sm:py-16 relative">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <img src="/brand/logo.png" alt="Aides Énergie France" className="h-14 w-auto" />
@@ -58,9 +60,8 @@ export default function Footer() {
               solutions de chauffage solaire.
             </p>
             <p className="mt-4 text-xs text-brand-ink/60 leading-relaxed border-l-2 border-brand-gold pl-3">
-              Plateforme privée d'information et de mise en relation, non affiliée à
-              l'administration. Nous ne délivrons aucune aide : nous vous aidons à préparer votre
-              projet.
+              Plateforme privée d'information et de mise en relation. Nous ne délivrons aucune
+              aide : nous vous aidons à préparer votre projet.
             </p>
           </div>
           {COLS.map((c) => (

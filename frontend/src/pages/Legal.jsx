@@ -38,8 +38,8 @@ export function MentionsLegales() {
       <p><span className={PLACEHOLDER}>[à compléter : hébergeur, adresse, pays — avant mise en production]</span></p>
       <h2>Nature du service</h2>
       <p>
-        Aides Énergie France est une plateforme privée d'information et de mise en relation,
-        indépendante de l'administration et de France Rénov'. Elle ne délivre aucune aide publique
+        Aides Énergie France est une plateforme privée d'information et de mise en relation.
+        Elle ne délivre aucune aide publique
         et ne garantit aucune éligibilité ni montant d'aide.
       </p>
       <h2>Propriété intellectuelle</h2>

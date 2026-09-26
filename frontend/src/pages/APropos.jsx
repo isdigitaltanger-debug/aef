@@ -29,8 +29,8 @@ export default function APropos() {
               et sans engagement.
             </p>
             <p className="text-brand-ink/80 text-base sm:text-lg leading-relaxed mb-10">
-              Nous ne sommes ni un site de l'État, ni France Rénov', et nous ne délivrons aucune
-              aide. Chaque page cite ses sources officielles, chaque questionnaire précise le
+              Nous sommes une plateforme privée et nous ne délivrons aucune aide. Chaque page
+              cite ses sources officielles, chaque questionnaire précise le
               destinataire des informations, et nous affichons volontairement nos limites.
             </p>
 

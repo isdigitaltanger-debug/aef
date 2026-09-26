@@ -33,7 +33,10 @@ et articles initiaux (4 publiés + 1 brouillon).
 | CORS_ORIGINS | Origines autorisées, séparées par des virgules |
 | JWT_SECRET | Secret JWT (hex 64) |
 | ADMIN_EMAIL / ADMIN_PASSWORD | Compte administrateur seedé |
-| NOTIFICATION_EMAIL | Destinataire des notifications (demandes@aidesenergiefrance.fr) |
+| NOTIFICATION_EMAIL | Adresse publique affichée sur le site (demandes@aidesenergiefrance.fr) |
+| NOTIFICATION_EMAIL_INTERNAL | Boîte interne (non affichée) qui reçoit chaque dossier avec la fiche PDF |
+| GMAIL_USERNAME / GMAIL_APP_PASSWORD | Compte Gmail expéditeur + mot de passe d'application (Compte Google → Sécurité → Validation en 2 étapes → Mots de passe des applications) |
+| GA4_MEASUREMENT_ID (+ REACT_APP_GA4_ID côté frontend) | ID de mesure Google Analytics 4, chargé uniquement après consentement « audience » |
 | SITE_ORIGIN | URL publique (sitemap) |
 | N8N_WEBHOOK_URL | *Optionnel* — webhook n8n/CRM ; si absent : état « non configuré » |
 
@@ -73,7 +76,9 @@ tests/test_api.py   # suite end-to-end de l'API (33 vérifications)
 
 ## États de configuration (honnêtes)
 - **Opérationnel et testé** : site public complet, tunnel SSC, préqualification, back-office, articles, export CSV, sitemap, cookies
-- **À configurer** : envoi d'e-mails (aucun fournisseur actif — le lead reste en base), webhook n8n (N8N_WEBHOOK_URL), GA4, Search Console
+- **E-mails (Gmail SMTP)** : chaque dossier (simulation, rappel, contact) part vers la boîte interne avec une fiche PDF complète (contact, réponses, préqualification, consentement, check-list de reprise de contact) ; le client reçoit un accusé de réception avec son récapitulatif PDF. Test depuis Administration → Intégrations → « Envoyer le mail test ».
+- **Statistiques de visite** : mesure interne first-party sans cookie (pages vues, visiteurs uniques, heure par heure, jour par jour, carte de chaleur, pages, sources, appareils) dans Administration → Statistiques de visite. GA4 en option.
+- **À configurer** : webhook n8n (N8N_WEBHOOK_URL), Search Console
 - **Nécessite une validation humaine avant lancement public** : mentions légales (SIREN, hébergeur), durée de conservation, relecture juridique des pages légales, table des zones H1/H2/H3 (case « vérifié » dans Administration > Règles)
 
 ## Tests

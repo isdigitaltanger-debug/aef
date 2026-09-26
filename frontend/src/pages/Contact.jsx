@@ -62,8 +62,8 @@ export default function Contact() {
                 </div>
               </div>
               <p className="text-xs text-brand-ink/60 border-t border-brand-line pt-4 leading-relaxed">
-                Plateforme privée d'information et de mise en relation, non affiliée à
-                l'administration. Vos messages sont transmis uniquement à notre équipe éditoriale.
+                Plateforme privée d'information et de mise en relation. Vos messages sont
+                transmis uniquement à notre équipe.
               </p>
             </div>
           </div>

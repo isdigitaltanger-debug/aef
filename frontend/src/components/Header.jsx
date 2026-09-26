@@ -40,7 +40,7 @@ export default function Header() {
         className="bg-brand-green text-white text-[11px] sm:text-xs text-center py-1.5 px-4 font-medium tracking-wide"
         data-testid="top-bandeau"
       >
-        Plateforme privée d'information et de mise en relation — non affiliée à l'administration
+        Plateforme privée d'information et de mise en relation
       </div>
       <header
         className={`sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b transition-all duration-300 ${

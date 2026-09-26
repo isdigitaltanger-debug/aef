@@ -553,9 +553,13 @@ async def patch_message(message_id: str, input: MessagePatch, request: Request,
 @router.get("/integrations")
 async def integrations(request: Request, admin: dict = Depends(require_role("editor"))):
     import os
+
+    import mailer
     db = request.app.state.db
     events = await db.integration_events.find({}, {"_id": 0}) \
         .sort("created_at", -1).to_list(30)
+    email_ok = mailer.is_configured()
+    ga4 = os.environ.get("GA4_MEASUREMENT_ID", "")
     return {
         "webhook_n8n": {"configured": bool(os.environ.get("N8N_WEBHOOK_URL")),
                         "env": "N8N_WEBHOOK_URL"},
@@ -563,13 +567,72 @@ async def integrations(request: Request, admin: dict = Depends(require_role("edi
                     "detail": "Assistant éditorial : propose des brouillons d'articles "
                               "(statut « brouillon » uniquement, validation humaine obligatoire "
                               "avant publication)."},
-        "email": {"configured": False,
+        "email": {"configured": email_ok,
                   "notification_email": os.environ.get("NOTIFICATION_EMAIL", ""),
-                  "detail": "Aucun fournisseur e-mail actif. Le lead est conservé en base ; "
-                            "l'envoi reste à configurer (état « non configuré »)."},
-        "ga4": {"configured": False, "detail": "Mesure d'audience désactivée tant qu'aucun ID "
-                                              "GA4 n'est configuré et aucun consentement recueilli."},
+                  "internal_email": mailer.internal_recipient(),
+                  "detail": (f"Gmail SMTP actif. Chaque dossier (simulation, rappel, contact) est envoyé à "
+                             f"{mailer.internal_recipient()} avec la fiche PDF complète ; le client reçoit un "
+                             f"accusé de réception avec son récapitulatif PDF.") if email_ok else
+                            ("Gmail SMTP non actif : renseignez GMAIL_USERNAME et GMAIL_APP_PASSWORD "
+                             "(mot de passe d'application Google). Les dossiers restent conservés en base.")},
+        "ga4": {"configured": bool(ga4), "measurement_id": ga4,
+                "detail": (f"GA4 actif ({ga4}) — chargé uniquement après consentement « audience » dans la bannière cookies."
+                           if ga4 else "Mesure GA4 désactivée : renseignez GA4_MEASUREMENT_ID (backend) et "
+                                       "REACT_APP_GA4_ID (frontend). Les statistiques internes fonctionnent sans GA4.")},
         "search_console": {"configured": False,
                            "detail": "Brancher via le README (fichier de vérification + sitemap)."},
         "journal": events,
     }
+
+
+class EmailTestInput(BaseModel):
+    to: EmailStr | None = None
+    with_client_copy: bool = True
+
+
+@router.post("/email/test")
+async def email_test(input: EmailTestInput, request: Request, admin: dict = Depends(require_role("editor"))):
+    """Envoie un dossier fictif complet (e-mail équipe + PDF, et copie « client ») pour valider la chaîne."""
+    import mailer
+    from rules import prequalify, DEFAULT_RULES
+    from server import journal
+
+    db = request.app.state.db
+    if not mailer.is_configured():
+        raise HTTPException(409, "Gmail SMTP non configuré (GMAIL_USERNAME / GMAIL_APP_PASSWORD).")
+    to = str(input.to) if input.to else mailer.internal_recipient()
+    rules_doc = await db.qualification_rules.find_one({"key": "ssc"}) or DEFAULT_RULES
+    answers = {"projet": "pac_ssc", "statut": "proprietaire_occupant", "type_logement": "maison",
+               "plus_de_2_ans": "oui", "surface": 135, "code_postal": "88000", "commune": "Épinal",
+               "occupants": 4, "chauffage_actuel": "chaudiere_fioul", "emetteurs": "fonte",
+               "toiture_orientation": "sud", "surface_toiture_16m2": "oui", "espace_technique": "oui",
+               "callback_slot": "mardi · 14h – 16h"}
+    lead = {"_id": new_id(), "reference": "AEF-TEST-" + secrets.token_hex(3).upper(), "created_at": now_iso(),
+            "source": "test_admin", "status_admin": "nouveau", "answers": answers,
+            "contact": {"prenom": "Marie", "nom": "Dupont (TEST)", "telephone": "06 12 34 56 78",
+                        "email": to if input.with_client_copy else ""},
+            "contact_ok": True, "marketing_ok": False, "prequal": prequalify(answers, rules_doc),
+            "consent": {"version": 1, "recipient": "Holding SMIE", "timestamp": now_iso(), "ip": "127.0.0.1",
+                        "user_agent": "Test administration"},
+            "utm": {"source": "test"}, "partner": "Holding SMIE"}
+    results = await mailer.notify_lead(db, lead, journal, internal_to=to)
+    await audit(db, admin["email"], "email_test", to, str(results))
+    if "echec" in results.values():
+        events = await db.integration_events.find({"reference": lead["reference"]}, {"_id": 0}).to_list(5)
+        raise HTTPException(502, "; ".join(e["detail"] for e in events if e["state"] == "echec") or "Échec d'envoi")
+    return {"ok": True, "to": to, "results": results, "reference": lead["reference"]}
+
+
+@router.get("/leads/{lead_id}/pdf")
+async def lead_pdf(lead_id: str, request: Request, internal: bool = True,
+                   admin: dict = Depends(require_role("agent"))):
+    import mailer
+
+    db = request.app.state.db
+    lead = await db.leads.find_one({"_id": lead_id}) or await db.leads.find_one({"reference": lead_id})
+    if not lead:
+        raise HTTPException(404, "Lead introuvable")
+    pdf = mailer.build_pdf(lead, internal=internal)
+    name = f"{'dossier' if internal else 'recapitulatif'}-{lead['reference']}.pdf"
+    return StreamingResponse(io.BytesIO(pdf), media_type="application/pdf",
+                             headers={"Content-Disposition": f"inline; filename={name}"})

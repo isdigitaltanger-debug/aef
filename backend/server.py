@@ -18,6 +18,8 @@ import rules as rules_mod
 from models import new_id, now_iso, serialize, serialize_list, LeadCreate, ContactCreate, CallbackCreate
 from ai_editorial import router as ai_router
 from admin import router as admin_router
+from analytics import router as analytics_router
+import mailer
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
@@ -47,6 +49,7 @@ async def security_headers(request, call_next):
 api = APIRouter(prefix="/api")
 api.include_router(admin_router)
 api.include_router(ai_router)
+api.include_router(analytics_router)
 
 RATE_LIMIT = defaultdict(deque)
 
@@ -110,9 +113,14 @@ async def dispatch_lead(db, lead: dict):
     else:
         await journal(db, "lead_webhook", "non_configure",
                       "Aucun N8N_WEBHOOK_URL configuré — lead conservé en base.", lead["reference"])
-    await journal(db, "email_notification", "non_configure",
-                  f"Aucun fournisseur e-mail actif. Destinataire configuré : "
-                  f"{os.environ.get('NOTIFICATION_EMAIL', '—')}", lead["reference"])
+    await mailer.notify_lead(db, lead, journal)
+
+
+def notify_in_background(coro):
+    import asyncio
+
+    task = asyncio.create_task(coro)
+    task.add_done_callback(lambda t: t.exception() and logger.error("Notification : %s", t.exception()))
 
 
 @api.get("/")
@@ -175,7 +183,7 @@ async def create_lead(input: LeadCreate, request: Request):
                     "detail": f"Création via simulation (source {input.utm.get('source') or 'directe'})"}],
     }
     await db.leads.insert_one(lead)
-    await dispatch_lead(db, lead)
+    notify_in_background(dispatch_lead(db, lead))
     logger.info("Lead créé : %s", reference)
     return {"reference": reference, "prequal": prequal, "duplicate": False}
 
@@ -273,9 +281,7 @@ async def create_callback(input: CallbackCreate, request: Request):
                     "detail": f"Demande de rappel via bouton flottant (créneau : {input.slot or 'non précisé'})"}],
     }
     await db.leads.insert_one(doc)
-    await journal(db, "email_notification", "non_configure",
-                  f"Demande de rappel {reference} — notification e-mail non configurée. "
-                  f"Destinataire : {os.environ.get('NOTIFICATION_EMAIL', '—')}", reference)
+    notify_in_background(mailer.notify_lead(db, doc, journal))
     logger.info("Rappel demandé : %s", reference)
     return {"ok": True, "reference": reference}
 
@@ -337,9 +343,7 @@ async def create_message(input: ContactCreate, request: Request):
            "nom": input.nom, "email": input.email, "sujet": input.sujet[:160],
            "message": input.message[:4000], "ip": ip}
     await db.contact_messages.insert_one(doc)
-    await journal(db, "contact_notification", "non_configure",
-                  f"Message reçu de {input.email} — aucun fournisseur e-mail actif. "
-                  f"Destinataire configuré : {os.environ.get('NOTIFICATION_EMAIL', '—')}")
+    notify_in_background(mailer.notify_contact(db, doc, journal))
     return {"ok": True}
 
 

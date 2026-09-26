@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, FileDown, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
-import api, { apiError } from "../lib/api";
+import api, { API_BASE, apiError } from "../lib/api";
 import { useAuth } from "./AdminApp";
 
 const LABELS = {
@@ -68,6 +68,10 @@ export default function LeadDetail() {
         <span className={`chip !cursor-default ${lead.transmitted ? "!bg-brand-green !text-white !border-brand-green" : ""}`}>
           {lead.transmitted ? "transmis" : "non transmis"}
         </span>
+        {lead.emails && <span className="chip !cursor-default" data-testid="lead-email-state">e-mail équipe : {lead.emails.interne || "—"}{lead.emails.client ? ` · client : ${lead.emails.client}` : ""}</span>}
+        <a href={`${API_BASE}/api/admin/leads/${lead.id}/pdf`} target="_blank" rel="noreferrer" className="ml-auto inline-flex items-center gap-2 text-sm font-semibold text-brand-green hover:underline" data-testid="lead-pdf-btn">
+          <FileDown className="h-4 w-4" /> Fiche PDF
+        </a>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
