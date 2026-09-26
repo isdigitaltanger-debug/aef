@@ -58,9 +58,25 @@ pas d'italique, ZIP livrable.
   parcours UI complet soumis et confirmé, image chauffage réparée, captures desktop 1440 +
   mobile 390, zip régénéré et téléchargeable.
 
+## Réalisé (26/09/2026 — suite)
+- **E-mails réels Gmail SMTP** (mailer.py) : chaque dossier (simulation, rappel, contact) → mail équipe vers
+  la boîte interne non affichée (turnlife8888@gmail.com, NOTIFICATION_EMAIL_INTERNAL) avec **fiche PDF
+  complète** (logo AEF, contact, réponses, préqualification, consentement/IP, check-list de reprise de
+  contact) ; le client reçoit un accusé de réception + **PDF récapitulatif**. Adresse publique inchangée
+  (demandes@aidesenergiefrance.fr). Envoi en tâche de fond, journal succès/échec, état visible dans
+  Intégrations, bouton « Envoyer le mail test », fiche PDF téléchargeable depuis chaque lead.
+  Mail test envoyé avec succès (interne + client).
+- **Statistiques de visite first-party** (analytics.py, Stats.jsx) : sans cookie, robots exclus, heure de
+  Paris — KPIs (en ligne, jour, période), jour par jour, heure par heure (jour sélectionnable), carte de
+  chaleur 7 j × 24 h, pages, types de page, sources, UTM, appareils, navigateurs, 60 dernières visites.
+  GA4 optionnel (REACT_APP_GA4_ID + GA4_MEASUREMENT_ID), chargé uniquement après consentement.
+- Mentions « non affilié à l'administration » supprimées partout → « Plateforme privée ».
+- 3 illustrations line-art discrètes en fond (aides, comment ça marche, footer), opacité 9 %.
+- ZIP régénéré (/aides-energie-france.zip). Tests : 46/46 API + 9/9 nouvelles fonctionnalités + UI.
+
 ## Reste à faire
 - P0 : valider juridiquement les pages légales (SIREN, hébergeur, conservation), recouper la
   table des zones (case « vérifié »).
-- P1 : brancher l'envoi d'e-mails réel (fournisseur au choix), webhooks n8n/CRM
-  (N8N_WEBHOOK_URL), GA4 + Search Console, comptes editor/agent réels.
+- P1 : renseigner l'ID GA4 si souhaité, webhooks n8n/CRM (N8N_WEBHOOK_URL), Search Console,
+  comptes editor/agent réels, déploiement Git.
 - P2 : capacité multi-réservations par créneau, rappels automatiques, statistiques avancées.
