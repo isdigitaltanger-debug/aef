@@ -46,7 +46,9 @@ const COLS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-brand-line bg-white" data-testid="site-footer">
+    <footer className="bg-white" data-testid="site-footer">
+      <div className="h-1.5 bg-brand-green" aria-hidden="true" />
+      <div className="h-[3px] bg-brand-gold/80" aria-hidden="true" />
       <div className="container-x py-14 sm:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">

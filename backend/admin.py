@@ -5,8 +5,11 @@ import io
 import secrets
 from datetime import datetime, timedelta, timezone
 
+import asyncio
+
 import bcrypt
 import jwt
+import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, EmailStr, Field
@@ -44,29 +47,49 @@ def create_refresh_token(user_id: str) -> str:
     return jwt.encode(payload, get_jwt_secret(), algorithm=JWT_ALGORITHM)
 
 
+def _sanitize(admin: dict) -> dict:
+    admin = dict(admin)
+    admin.pop("password_hash", None)
+    return admin
+
+
+async def _admin_from_session(db, token: str):
+    doc = await db.admin_sessions.find_one({"session_token": token})
+    if not doc:
+        return None
+    expires_at = doc.get("expires_at")
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < datetime.now(timezone.utc):
+        await db.admin_sessions.delete_one({"_id": doc["_id"]})
+        return None
+    return await db.admin_profiles.find_one({"_id": doc.get("user_id")})
+
+
 async def get_current_admin(request: Request) -> dict:
     db = request.app.state.db
-    token = request.cookies.get("access_token")
+    token = request.cookies.get("access_token") or request.cookies.get("session_token")
     if not token:
         auth = request.headers.get("Authorization", "")
         if auth.startswith("Bearer "):
             token = auth[7:]
-    if not token:
-        raise HTTPException(401, "Non authentifié")
-    try:
-        payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
-        if payload.get("type") != "access":
-            raise HTTPException(401, "Type de jeton invalide")
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(401, "Session expirée")
-    except jwt.InvalidTokenError:
-        raise HTTPException(401, "Jeton invalide")
-    admin = await db.admin_profiles.find_one({"_id": payload.get("sub")})
-    if not admin:
-        raise HTTPException(401, "Compte introuvable")
-    admin = dict(admin)
-    admin.pop("password_hash", None)
-    return admin
+    if token:
+        # 1) JWT d'accès (connexion e-mail / mot de passe)
+        try:
+            payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+            if payload.get("type") == "access":
+                admin = await db.admin_profiles.find_one({"_id": payload.get("sub")})
+                if admin:
+                    return _sanitize(admin)
+        except jwt.InvalidTokenError:
+            pass
+        # 2) Session Google Emergent (7 jours)
+        admin = await _admin_from_session(db, token)
+        if admin:
+            return _sanitize(admin)
+    raise HTTPException(401, "Non authentifié")
 
 
 def require_role(minimum: str):
@@ -127,6 +150,10 @@ class MessagePatch(BaseModel):
     status: str = Field(pattern=r"^(nouveau|traite|archive)$")
 
 
+class GoogleSessionInput(BaseModel):
+    session_id: str = Field(min_length=10, max_length=200)
+
+
 @router.post("/login")
 async def login(input: LoginInput, request: Request, response: Response):
     db = request.app.state.db
@@ -159,10 +186,54 @@ async def login(input: LoginInput, request: Request, response: Response):
     return {"email": admin["email"], "name": admin.get("name"), "role": admin.get("role")}
 
 
+@router.post("/google-session")
+async def google_session(input: GoogleSessionInput, request: Request, response: Response):
+    """Échange le session_id Emergent Auth contre une session admin.
+
+    Sécurité : seuls les e-mails déjà présents dans admin_profiles sont autorisés —
+    un compte Google inconnu est refusé (back-office privé, pas d'inscription publique).
+    """
+    # REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+    db = request.app.state.db
+    try:
+        r = await asyncio.to_thread(
+            lambda: requests.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": input.session_id}, timeout=15))
+    except Exception:
+        raise HTTPException(502, "Service d'authentification Google injoignable. Réessayez.")
+    if r.status_code != 200:
+        raise HTTPException(401, "Session Google invalide ou expirée.")
+    data = r.json()
+    email = str(data.get("email", "")).lower().strip()
+    admin = await db.admin_profiles.find_one({"email": email})
+    if not admin:
+        await audit(db, email or "?", "google_login_refuse", "E-mail Google non autorisé")
+        raise HTTPException(403, "Ce compte Google n'est pas autorisé à accéder à l'administration.")
+
+    session_token = data.get("session_token")
+    if not session_token:
+        raise HTTPException(401, "Session Google incomplète.")
+    await db.admin_sessions.insert_one({
+        "user_id": admin["_id"], "session_token": session_token, "email": email,
+        "expires_at": datetime.now(timezone.utc) + timedelta(days=7),
+        "created_at": now_iso(),
+    })
+    _cookie(response, "session_token", session_token, COOKIE_MAX_AGE_REFRESH)
+    await audit(db, email, "google_login", "Connexion Google réussie")
+    return {"email": admin["email"], "name": data.get("name") or admin.get("name"), "role": admin.get("role")}
+
+
 @router.post("/logout")
-async def logout(response: Response, admin: dict = Depends(get_current_admin)):
+async def logout(request: Request, response: Response, admin: dict = Depends(get_current_admin)):
+    db = request.app.state.db
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.admin_sessions.delete_one({"session_token": session_token})
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
+    response.delete_cookie("session_token", path="/")
+    await audit(db, admin.get("email", "?"), "logout", "admin")
     return {"ok": True}
 
 
@@ -245,9 +316,9 @@ async def export_leads(request: Request, admin: dict = Depends(require_role("edi
                      "toiture_16m2", "espace_technique", "prenom", "nom", "telephone", "email",
                      "contact_ok", "marketing_ok", "source", "transmis", "notes"])
     async for lead in db.leads.find({}).sort("created_at", -1):
-        a = lead.get("answers", {})
-        c = lead.get("contact", {})
-        p = lead.get("prequal", {})
+        a = lead.get("answers") or {}
+        c = lead.get("contact") or {}
+        p = lead.get("prequal") or {}
         writer.writerow([lead.get("reference"), lead.get("created_at"), lead.get("status_admin"),
                          p.get("status"), p.get("zone"), p.get("pack_kw"), a.get("projet"),
                          a.get("statut"), a.get("type_logement"), a.get("plus_de_2_ans"),
@@ -488,6 +559,10 @@ async def integrations(request: Request, admin: dict = Depends(require_role("edi
     return {
         "webhook_n8n": {"configured": bool(os.environ.get("N8N_WEBHOOK_URL")),
                         "env": "N8N_WEBHOOK_URL"},
+        "chatgpt": {"configured": bool(os.environ.get("EMERGENT_LLM_KEY")), "model": "gpt-5.4",
+                    "detail": "Assistant éditorial : propose des brouillons d'articles "
+                              "(statut « brouillon » uniquement, validation humaine obligatoire "
+                              "avant publication)."},
         "email": {"configured": False,
                   "notification_email": os.environ.get("NOTIFICATION_EMAIL", ""),
                   "detail": "Aucun fournisseur e-mail actif. Le lead est conservé en base ; "

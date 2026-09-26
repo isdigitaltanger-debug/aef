@@ -16,6 +16,7 @@ from starlette.middleware.cors import CORSMiddleware
 import seed as seed_mod
 import rules as rules_mod
 from models import new_id, now_iso, serialize, serialize_list, LeadCreate, ContactCreate, CallbackCreate
+from ai_editorial import router as ai_router
 from admin import router as admin_router
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
@@ -45,6 +46,7 @@ async def security_headers(request, call_next):
 
 api = APIRouter(prefix="/api")
 api.include_router(admin_router)
+api.include_router(ai_router)
 
 RATE_LIMIT = defaultdict(deque)
 
@@ -200,6 +202,44 @@ async def get_lead_public(reference: str, request: Request):
         "disclaimer": p.get("disclaimer"),
         "recipient": lead.get("partner"),
     }
+
+
+@api.get("/slots")
+async def get_slots(request: Request, days: int = 4):
+    """Planning des rappels : ~65 % des créneaux restent ouverts à la réservation.
+    Les autres apparaissent déjà réservés ; un créneau pris par un client devient complet."""
+    import hashlib
+    from datetime import datetime, timedelta
+    from zoneinfo import ZoneInfo
+
+    db = request.app.state.db
+    jours = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
+    mois = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+            "septembre", "octobre", "novembre", "décembre"]
+    heures = ["9h – 11h", "11h – 13h", "14h – 16h", "16h – 18h"]
+
+    out = []
+    d = datetime.now(ZoneInfo("Europe/Paris"))
+    while len(out) < min(max(2, days), 6):
+        d += timedelta(days=1)
+        if d.weekday() >= 5:
+            continue
+        date_key = d.strftime("%Y-%m-%d")
+        day_label = f"{jours[d.weekday()]} {d.day} {mois[d.month - 1]}"
+        slots = []
+        for t in heures:
+            h = int(hashlib.sha1(f"{date_key}|{t}".encode()).hexdigest(), 16) % 100
+            taken = h < 35  # 35 % du planning paraît déjà réservé, 65 % libre
+            if not taken:
+                count = await db.leads.count_documents({
+                    "answers.callback_slot": f"{day_label} · {t}",
+                    "status_admin": {"$ne": "refuse"},
+                })
+                taken = count >= 1
+            slots.append({"time": t, "available": not taken})
+        out.append({"date": date_key, "day_label": day_label, "slots": slots})
+    return {"days": out,
+            "note": "Environ 65 % des créneaux restent ouverts à la réservation."}
 
 
 @api.post("/callback")

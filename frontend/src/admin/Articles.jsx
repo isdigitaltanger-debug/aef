@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Pencil, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import api, { apiError } from "../lib/api";
 

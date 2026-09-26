@@ -34,21 +34,33 @@ pas d'italique, ZIP livrable.
 - Site public complet : accueil (hero + formulaire flottant + aides du moment), /simulation/,
   /merci/, 6 pages aides (dont chèque énergie sans captation), 6 pages solutions, actualités
   (recherche, catégories, pagination), à propos, contact, 4 pages légales à trous identifiés, 404.
+- Design institutionnel « codes de l'État » : police Marianne auto-hébergée, bandeau de
+  transparence, double filet vert/or sous le header et au-dessus du footer, motif de fond à
+  fines lignes, puces carrées sur les intitulés, zéro italique, aucun montant d'aide affiché.
 - Formulaire 4 étapes en diapositives horizontales, état conservé, honeypot, dédup 24 h,
-  rate limit, consentement versionné (destinataire Holding SMIE), créneaux de rappel si profil
-  favorable, préqualification server-side (jamais d'« éligible », pack = max des 2 grilles
-  uniquement si les deux définies, zones H1/H2/H3 versionnées).
-- Bouton flottant « Me faire rappeler » avec créneau optionnel (POST /api/callback).
-- Back-office : dashboard, leads filtrables + fiche + statuts + notes + commissions, export CSV,
-  CRUD articles (brouillon/publié), partenaires, règles versionnées + case « vérifié »,
-  messages, journal d'intégrations (états réels : e-mail non configuré), lead de test.
-- Bannière cookies (accepter/refuser/personnaliser), bandeau de transparence, Marianne, zéro
-  italique, aucun montant d'aide affiché.
-- Vérifié : 38/38 tests API (tests/test_api.py), parcours UI complet soumis et confirmé,
-  captures desktop 1440 + mobile 390, zip régénéré et téléchargeable.
+  rate limit, consentement versionné (destinataire Holding SMIE), préqualification server-side
+  (jamais d'« éligible », pack = max des 2 grilles uniquement si les deux définies, zones
+  H1/H2/H3 versionnées).
+- Créneaux de rappel : planning 4 jours ouvrés × 4 créneaux, ~65 % laissés libres (masque
+  déterministe + capacité réelle en base), slots complets non sélectionnables.
+- Bouton flottant « Me faire rappeler » (POST /api/callback) avec créneau optionnel.
+- **Google sign-in géré par Emergent** : bouton « Continuer avec Google » sur /administration/login,
+  échange session_id côté serveur (POST /api/admin/google-session), session 7 jours httpOnly,
+  liste d'accès = e-mails admin existants (compte inconnu → 403).
+- **Assistant éditorial IA (ChatGPT GPT-5.4, clé universelle Emergent)** : propose des brouillons
+  d'articles depuis un brief, enregistrés en statut « brouillon », jamais publiés sans validation ;
+  journal des générations ; état visible dans Intégrations.
+- Back-office : dashboard, leads filtrables + fiche + statuts + notes + commissions, export CSV
+  (tolérant aux leads sans préqualification), CRUD articles, partenaires, règles versionnées +
+  case « vérifié », messages, journal d'intégrations (états réels), lead de test.
+- Bannière cookies (accepter/refuser/personnaliser), sitemap dynamique, JSON-LD.
+- Vérifié : 46/46 tests API (dont session Google émulée, planning 65 %, brouillon IA réel),
+  parcours UI complet soumis et confirmé, image chauffage réparée, captures desktop 1440 +
+  mobile 390, zip régénéré et téléchargeable.
 
 ## Reste à faire
 - P0 : valider juridiquement les pages légales (SIREN, hébergeur, conservation), recouper la
-  table des zones (case « vérifié »), brancher l'envoi d'e-mails (fournisseur au choix).
-- P1 : webhooks n8n/CRM (N8N_WEBHOOK_URL), GA4 + Search Console, comptes editor/agent réels.
-- P2 : veille d'articles assistée, statistiques avancées, FAQ dynamiques admin.
+  table des zones (case « vérifié »).
+- P1 : brancher l'envoi d'e-mails réel (fournisseur au choix), webhooks n8n/CRM
+  (N8N_WEBHOOK_URL), GA4 + Search Console, comptes editor/agent réels.
+- P2 : capacité multi-réservations par créneau, rappels automatiques, statistiques avancées.

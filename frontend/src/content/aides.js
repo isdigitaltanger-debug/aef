@@ -183,7 +183,7 @@ export const AIDS = [
     title: "Le chèque énergie",
     family: "Aide aux factures",
     tagline: "Une aide aux factures, distincte des aides aux travaux",
-    image: "https://images.unsplash.com/photo-1566838803980-56bfa5300e8c?crop=entropy&cs=srgb&fm=jpg&q=85",
+    image: "https://images.unsplash.com/flagged/photo-1566838803980-56bfa5300e8c?crop=entropy&cs=srgb&fm=jpg&q=85",
     intro:
       "Le chèque énergie est une aide de l'État destinée aux ménages pour régler leurs factures d'énergie. Il est envoyé automatiquement aux foyers éligibles. Il ne s'agit pas d'une aide aux travaux : elle ne passe par aucune plateforme privée, y compris la nôtre.",
     conditions: [

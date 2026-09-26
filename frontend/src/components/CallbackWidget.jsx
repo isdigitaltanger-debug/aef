@@ -4,64 +4,83 @@ import { CalendarCheck, CheckCircle2, Loader2, Phone, X } from "lucide-react";
 import { toast } from "sonner";
 import api, { apiError } from "../lib/api";
 
-const SLOTS = ["9h – 11h", "11h – 13h", "14h – 16h", "16h – 18h"];
-
-export function nextBusinessDays(n = 4) {
-  const days = [];
-  const d = new Date();
-  while (days.length < n) {
-    d.setDate(d.getDate() + 1);
-    if (d.getDay() !== 0 && d.getDay() !== 6) days.push(new Date(d));
-  }
-  return days;
-}
-
-export function dayLabel(d) {
-  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
-}
-
 export function SlotPicker({ value, onChange, testPrefix }) {
-  const days = nextBusinessDays();
+  const [planning, setPlanning] = useState(null);
   const [dayIdx, setDayIdx] = useState(0);
+
+  useEffect(() => {
+    let live = true;
+    api.get("/slots", { params: { days: 4 } })
+      .then((r) => { if (live) setPlanning(r.data.days || []); })
+      .catch(() => { if (live) setPlanning([]); });
+    return () => { live = false; };
+  }, []);
+
+  useEffect(() => {
+    if (planning && value) {
+      const day = planning[dayIdx];
+      const t = value.split(" · ").pop();
+      const slot = day?.slots?.find((x) => x.time === t);
+      if (slot && !slot.available) onChange("");
+    }
+  }, [planning, dayIdx, value, onChange]);
+
+  if (!planning) return <p className="text-xs text-brand-ink/50">Chargement des créneaux…</p>;
+  if (!planning.length) {
+    return <p className="text-xs text-brand-ink/50">Planning momentanément indisponible : vous serez rappelé(e) dès que possible.</p>;
+  }
+
+  const day = planning[Math.min(dayIdx, planning.length - 1)];
   return (
     <div data-testid={`${testPrefix}-slot-picker`} className="space-y-3">
       <div className="flex flex-wrap gap-2">
-        {days.map((d, i) => (
+        {planning.map((d, i) => (
           <button
-            key={i}
+            key={d.date}
             type="button"
-            onClick={() => {
-              setDayIdx(i);
-              onChange("");
-            }}
+            onClick={() => setDayIdx(i)}
             data-testid={`${testPrefix}-day-${i}`}
-            className={`chip ${dayIdx === i ? "chip-active" : ""}`}
-            aria-pressed={dayIdx === i}
+            className={`chip ${i === dayIdx ? "chip-active" : ""}`}
+            aria-pressed={i === dayIdx}
           >
-            {dayLabel(d)}
+            {d.day_label}
           </button>
         ))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {SLOTS.map((s) => {
-          const label = `${dayLabel(days[dayIdx])} · ${s}`;
+        {day.slots.map((s, i) => {
+          const label = `${day.day_label} · ${s.time}`;
           const active = value === label;
+          if (!s.available) {
+            return (
+              <span
+                key={s.time}
+                data-testid={`${testPrefix}-slot-${i}-complet`}
+                className="rounded-[4px] border border-brand-line bg-brand-ivory px-3 py-2.5 text-xs font-semibold text-brand-ink/35 text-center cursor-not-allowed select-none"
+              >
+                {s.time} · complet
+              </span>
+            );
+          }
           return (
             <button
-              key={s}
+              key={s.time}
               type="button"
               onClick={() => onChange(label)}
-              data-testid={`${testPrefix}-slot-${SLOTS.indexOf(s)}`}
+              data-testid={`${testPrefix}-slot-${i}`}
               className={`rounded-[4px] border px-3 py-2.5 text-xs font-semibold transition-all cursor-pointer ${
                 active ? "border-brand-green bg-brand-green text-white" : "border-[#C9D1D8] bg-white text-brand-ink/75 hover:border-brand-green hover:text-brand-green"
               }`}
               aria-pressed={active}
             >
-              {s}
+              {s.time}
             </button>
           );
         })}
       </div>
+      <p className="text-[11px] text-brand-ink/50">
+        Environ 65 % des créneaux restent ouverts à la réservation ; un créneau réservé est retiré du planning.
+      </p>
     </div>
   );
 }

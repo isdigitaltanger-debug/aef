@@ -108,6 +108,8 @@ export default function Header() {
           </motion.nav>
         )}
       </AnimatePresence>
+      <div className="h-[3px] bg-brand-green" aria-hidden="true" />
+      <div className="h-px bg-brand-gold" aria-hidden="true" />
       </header>
     </>
   );

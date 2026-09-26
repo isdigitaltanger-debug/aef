@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Navigate, NavLink, Route, Routes, Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, Navigate, NavLink, Route, Routes } from "react-router-dom";
 import { BarChart3, Building2, FileText, ExternalLink, LayoutDashboard, Loader2, LogOut, Mail, Plug, ShieldCheck, TestTube } from "lucide-react";
 import api, { apiError } from "../lib/api";
 import Dashboard from "./Dashboard";
@@ -32,6 +32,9 @@ export default function AdminApp() {
   AuthCtx.setUser = setUser;
 
   useEffect(() => {
+    // CRITICAL : retour OAuth Google — GoogleCallback échange le session_id avant toute
+    // vérification de session existante (sinon 401 prématuré sur /admin/me).
+    if (window.location.hash?.includes("session_id=")) return;
     api.get("/admin/me").then((r) => setUser(r.data)).catch(() => setUser(false));
   }, []);
 
@@ -56,6 +59,7 @@ export default function AdminApp() {
   return (
     <Routes>
       <Route path="login" element={user ? <Navigate to="/administration" replace /> : <Login />} />
+      <Route path="callback" element={<GoogleCallback />} />
       <Route element={user ? <AdminLayout /> : user === false ? <Navigate to="/administration/login" replace /> : <Loading />} >
         <Route index element={<Dashboard />} />
         <Route path="leads" element={<Leads />} />
@@ -100,12 +104,32 @@ function Login() {
     }
   };
 
+  const googleLogin = () => {
+    // REMINDER: DO NOT HARDCODE THE URL, OR ADD ANY FALLBACKS OR REDIRECT URLS, THIS BREAKS THE AUTH
+    // Le retour se fait sur /administration/callback qui échange le session_id côté serveur.
+    const redirectUrl = window.location.origin + "/administration/callback";
+    window.location.href = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-4" data-testid="admin-login-page">
       <form onSubmit={submit} className="card w-full max-w-md p-8">
         <img src="/brand/logo.png" alt="Aides Énergie France" className="h-12 w-auto mb-6" />
         <h1 className="h-serif text-2xl font-semibold mb-1">Espace administration</h1>
         <p className="text-sm text-brand-ink/60 mb-6">Accès réservé — connexion sécurisée.</p>
+        <button
+          type="button"
+          onClick={googleLogin}
+          data-testid="admin-google-btn"
+          className="w-full inline-flex items-center justify-center gap-3 border border-[#C9D1D8] bg-white hover:bg-brand-ivory text-brand-ink text-sm font-semibold px-6 py-3.5 rounded-md transition-all cursor-pointer mb-5"
+        >
+          <GoogleIcon /> Continuer avec Google
+        </button>
+        <div className="flex items-center gap-3 mb-5" aria-hidden="true">
+          <span className="h-px flex-1 bg-brand-line" />
+          <span className="text-xs text-brand-ink/45 uppercase tracking-wider">ou par e-mail</span>
+          <span className="h-px flex-1 bg-brand-line" />
+        </div>
         <label className="block mb-4">
           <span className="text-sm font-semibold text-brand-ink block mb-2">E-mail</span>
           <input type="email" required className="input-base" value={email} onChange={(e) => setEmail(e.target.value)} data-testid="admin-login-email" placeholder="admin@…" />
@@ -122,6 +146,51 @@ function Login() {
       </form>
     </div>
   );
+}
+
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+    <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z" />
+    <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.32A9 9 0 0 0 9 18z" />
+    <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.96H.96a9 9 0 0 0 0 8.08l3.01-2.32z" />
+    <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.42 0 9 0A9 9 0 0 0 .96 4.96l3.01 2.32C4.68 5.16 6.66 3.58 9 3.58z" />
+  </svg>
+);
+
+function GoogleCallback() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const hasProcessed = useRef(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (hasProcessed.current) return;
+    hasProcessed.current = true;
+    const sessionId = new URLSearchParams((location.hash || "").replace(/^#/, "")).get("session_id");
+    if (!sessionId) {
+      setError("Lien de connexion invalide : aucune session Google trouvée.");
+      return;
+    }
+    api.post("/admin/google-session", { session_id: sessionId })
+      .then(({ data }) => {
+        AuthCtx.setUser(data);
+        navigate("/administration", { replace: true });
+      })
+      .catch((e) => setError(apiError(e)));
+  }, [location.hash, navigate]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#FAFAF7] flex items-center justify-center p-4">
+        <div className="card w-full max-w-md p-8 text-center" data-testid="google-callback-error">
+          <p className="font-bold text-brand-ink text-lg mb-2">Connexion refusée</p>
+          <p className="text-sm text-brand-ink/70 mb-5">{error}</p>
+          <Link to="/administration/login" className="btn-primary w-full" data-testid="google-error-back">Retour à la connexion</Link>
+        </div>
+      </div>
+    );
+  }
+  return <Loading />;
 }
 
 function AdminLayout() {

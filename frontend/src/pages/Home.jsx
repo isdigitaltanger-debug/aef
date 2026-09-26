@@ -61,18 +61,18 @@ export default function Home() {
       />
 
       {/* ================= HERO ================= */}
-      <section ref={heroRef} className="relative overflow-hidden" data-testid="hero-section">
+      <section ref={heroRef} className="relative overflow-hidden grain" data-testid="hero-section">
         <motion.div className="absolute inset-0" style={{ y }} aria-hidden="true">
           <img
             src="https://images.unsplash.com/photo-1655300283246-1ef0317a565d?crop=entropy&cs=srgb&fm=jpg&q=85"
             alt=""
             className="h-[115%] w-full object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FAFAF7] via-[#FAFAF7]/88 to-[#FAFAF7]/55" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#FAFAF7]/40 via-transparent to-[#FAFAF7]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FAFAF7] via-[#FAFAF7]/78 to-[#FAFAF7]/25" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#FAFAF7]/45 via-transparent to-[#FAFAF7]" />
         </motion.div>
 
-        <div className="container-x relative pt-12 sm:pt-16 pb-16 sm:pb-24">
+        <div className="container-x relative pt-10 sm:pt-14 pb-12 sm:pb-16">
           <div className="grid items-start gap-10 lg:grid-cols-12">
             <div className="lg:col-span-5">
               <p className="eyebrow mb-5 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white/70 px-4 py-1.5 backdrop-blur-sm">
@@ -123,7 +123,7 @@ export default function Home() {
           </div>
 
           {/* Les aides du moment */}
-          <div className="mt-10" data-testid="aides-du-moment">
+          <div className="mt-8" data-testid="aides-du-moment">
             <div className="flex items-center gap-4 mb-4">
               <span className="eyebrow whitespace-nowrap">Les aides du moment</span>
               <span className="h-px flex-1 bg-brand-line" aria-hidden="true" />

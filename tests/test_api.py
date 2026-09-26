@@ -129,6 +129,46 @@ check("rappel tel invalide -> 422", rcb4.status_code == 422, rcb4.status_code)
 rls2 = s.get(f"{API}/admin/leads", params={"q": "Paul Rapide"}, timeout=10)
 check("lead rappel visible dans admin", any(i["source"] == "rappel" for i in rls2.json()["items"]))
 
+# ---- GOOGLE AUTH EMERGENT (session émulée en base, échange testé côté serveur) ----
+import uuid as _uuid
+from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+from pymongo import MongoClient as _MC
+
+_mdb = _MC("mongodb://localhost:27017")["test_database"]
+_admin_doc = _mdb.admin_profiles.find_one({"email": "admin@aidesenergiefrance.fr"})
+assert _admin_doc, "admin seedé manquant"
+_tok = "test_session_" + _uuid.uuid4().hex
+_mdb.admin_sessions.insert_one({
+    "user_id": _admin_doc["_id"], "session_token": _tok, "email": _admin_doc["email"],
+    "expires_at": _dt.now(_tz.utc) + _td(days=7), "created_at": _dt.now(_tz.utc).isoformat(),
+})
+rg1 = requests.get(f"{API}/admin/me", cookies={"session_token": _tok}, timeout=10)
+check("session Google (cookie) -> me 200", rg1.status_code == 200 and rg1.json().get("role") == "admin", rg1.status_code)
+rg2 = requests.get(f"{API}/admin/dashboard", cookies={"session_token": _tok}, timeout=10)
+check("session Google -> dashboard autorisé", rg2.status_code == 200)
+rg3 = requests.post(f"{API}/admin/test-lead", cookies={"session_token": _tok}, timeout=10)
+check("session Google -> écritures autorisées", rg3.status_code == 200)
+rg4 = requests.get(f"{API}/admin/me", cookies={"session_token": "token_inexistant_123"}, timeout=10)
+check("session Google invalide -> 401", rg4.status_code == 401, rg4.status_code)
+_mdb.admin_sessions.delete_one({"session_token": _tok})
+_mdb.leads.delete_many({"source": "test_admin", "reference": rg3.json().get("reference", "x")})
+
+# ---- PLANNING DES CRÉNEAUX (65 % ouverts) ----
+rsl = requests.get(f"{API}/slots", params={"days": 4}, timeout=10)
+sl = rsl.json().get("days", [])
+check("planning créneaux 4 jours ouvrés", rsl.status_code == 200 and len(sl) == 4, len(sl))
+free = sum(1 for d_ in sl for x in d_["slots"] if x["available"])
+total = sum(len(d_["slots"]) for d_ in sl)
+check("environ 65 % de créneaux libres", 0.45 <= free / total <= 0.85, f"{free}/{total}")
+rsl2 = requests.get(f"{API}/slots", timeout=10)
+check("planning stable (pas de week-end)", all(d_["day_label"].split()[0] not in ("samedi", "dimanche") for d_ in rsl2.json()["days"]))
+
+# ---- ASSISTANT ÉDITORIAL IA (ChatGPT réel — 1 appel) ----
+rai = s.post(f"{API}/admin/ai/draft", json={"brief": "Entretenir sa pompe à chaleur : les bons gestes au quotidien", "category": "travaux"}, timeout=120)
+check("brouillon IA cree (statut brouillon)", rai.status_code == 200 and rai.json().get("status") == "draft" and rai.json().get("ai_generated") is True, rai.text[:150])
+if rai.status_code == 200:
+    s.delete(f"{API}/admin/articles/{rai.json()['id']}", timeout=10)
+
 fails = [r_ for r_ in results if not r_[1]]
 print(f"\n=== {len(results) - len(fails)}/{len(results)} PASS ===")
 sys.exit(1 if fails else 0)

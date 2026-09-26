@@ -27,6 +27,13 @@ html.lenis body {
 
 body {
   background-color: var(--ivory);
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(21, 92, 69, 0.028) 0,
+    rgba(21, 92, 69, 0.028) 1px,
+    transparent 1px,
+    transparent 30px
+  );
   color: var(--ink);
   font-family: "Marianne", Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +58,16 @@ body {
     @apply py-16 sm:py-24;
   }
   .eyebrow {
-    @apply text-[11px] sm:text-xs uppercase tracking-[0.18em] font-bold text-brand-green;
+    @apply text-[11px] sm:text-xs uppercase tracking-[0.18em] font-bold text-brand-green inline-flex items-center;
+  }
+  .eyebrow::before {
+    content: "";
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background: var(--green);
+    margin-right: 9px;
+    flex-shrink: 0;
   }
   .h-serif {
     @apply font-serif font-bold tracking-tight text-brand-ink;

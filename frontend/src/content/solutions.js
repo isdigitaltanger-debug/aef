@@ -128,7 +128,7 @@ export const SOLUTIONS = [
     slug: "chauffage",
     title: "Chauffage",
     tagline: "Choisir le bon système pour son logement",
-    image: "https://images.unsplash.com/photo-1566838803980-56bfa5300e8c?crop=entropy&cs=srgb&fm=jpg&q=85",
+    image: "https://images.unsplash.com/flagged/photo-1566838803980-56bfa5300e8c?crop=entropy&cs=srgb&fm=jpg&q=85",
     fonctionnement: [
       "Le choix du chauffage dépend du bâti, des émetteurs existants et du profil d'occupation.",
       "Les systèmes efficients (PAC, solaire thermique associé) réduisent la consommation d'énergie fossile.",

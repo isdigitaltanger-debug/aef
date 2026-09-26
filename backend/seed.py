@@ -220,6 +220,8 @@ async def seed(db, admin_email: str, admin_password: str):
     await db.audit_log.create_index("created_at")
     await db.login_attempts.create_index("identifier")
     await db.qualification_rules.create_index("version")
+    await db.admin_sessions.create_index("session_token")
+    await db.admin_sessions.create_index("expires_at", expireAfterSeconds=0)
 
     # Partenaire destinataire (raison sociale fournie par l'exploitant)
     if not await db.partners.find_one({"raison_sociale": {"$ne": None}}):
