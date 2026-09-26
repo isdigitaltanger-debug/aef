@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /administration
+
+Sitemap: https://site-fonctionnel-2.preview.emergentagent.com/api/sitemap.xml

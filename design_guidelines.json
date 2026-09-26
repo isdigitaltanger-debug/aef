@@ -1,0 +1,116 @@
+{
+  "project_name": "Aides Énergie France",
+  "archetype": "French Editorial & High-Trust Private Energy Portal",
+  "theme": "Light Editorial (Ivory & Botanical Deep Green)",
+  "brand_charter": {
+    "disclaimer": "Plateforme éditoriale privée d'information et d'accompagnement - Organisme indépendant non rattaché aux services de l'État",
+    "background_ivory": "#FAFAF7",
+    "surface_white": "#FFFFFF",
+    "primary_deep_green": "#155C45",
+    "secondary_soft_green": "#43875C",
+    "text_dark_slate": "#192A35",
+    "accent_solar_gold": "#D9A74A",
+    "accent_solar_gold_hover": "#C28E2B",
+    "border_subtle": "#E2E8F0",
+    "border_editorial": "#E5E5DF"
+  },
+  "fonts": {
+    "google_fonts_url": "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+    "heading": "'Cormorant Garamond', Georgia, serif",
+    "body": "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif",
+    "mono": "'JetBrains Mono', monospace"
+  },
+  "typography_scale": {
+    "hero_heading": "text-4xl sm:text-5xl lg:text-6xl font-serif tracking-tight text-[#192A35] leading-[1.08]",
+    "section_heading": "text-2xl sm:text-3xl lg:text-4xl font-serif tracking-tight text-[#192A35] leading-tight",
+    "card_heading": "text-xl sm:text-2xl font-serif text-[#192A35]",
+    "subheading": "text-base sm:text-lg text-[#192A35]/80 font-sans leading-relaxed",
+    "body": "text-base font-sans text-[#192A35]/90 leading-relaxed",
+    "body_small": "text-sm font-sans text-[#192A35]/70 leading-normal",
+    "eyebrow": "text-xs uppercase tracking-[0.2em] font-sans font-semibold text-[#155C45]"
+  },
+  "motion_and_effects": {
+    "lenis_scroll": "Lenis momentum smooth scroll initialized at root level",
+    "hero_kinetic_reveal": "Framer motion line-by-line staggered mask reveal with subtle delay (y: 30 -> 0, opacity: 0 -> 1)",
+    "parallax_hero": "Subtle y-axis scroll translation on hero background photography (yRange: [0, 80])",
+    "editorial_marquee": "Slow, elegant scrolling ribbon displaying key stats (e.g. 'Jusqu'à 11 000€ d'aides Cumulables' • 'Audit Énergétique Certifié' • 'Pompes à Chaleur & Solaire Thermal SSC')",
+    "micro_interactions": "Soft lift -translate-y-1, border color shift to #155C45 on card hover, discreet solar gold dot pulse"
+  },
+  "layout_and_spacing": {
+    "page_background": "bg-[#FAFAF7]",
+    "header": "sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-[#E5E5DF] h-20 transition-all",
+    "container_padding": "max-w-7xl mx-mx-auto px-4 sm:px-6 lg:px-8",
+    "section_spacing": "py-16 sm:py-24 lg:py-32",
+    "card_padding": "p-6 sm:p-8 rounded-2xl border border-[#E5E5DF] bg-white shadow-[0_4px_20px_-4px_rgba(21,92,69,0.04)] hover:shadow-[0_12px_30px_-6px_rgba(21,92,69,0.08)] transition-all duration-300"
+  },
+  "primary_ctas": {
+    "constant_cta_text": "Je teste mon éligibilité en 2 minutes",
+    "reassurance_text": "Gratuit et sans engagement",
+    "button_style": "bg-[#155C45] hover:bg-[#0f4433] text-white font-medium px-6 py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 group cursor-pointer"
+  },
+  "image_urls": {
+    "hero_house_solar": "https://images.unsplash.com/photo-1655300283246-1ef0317a565d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwxfHxmcmVuY2glMjBob3VzZSUyMHNvbGFyJTIwcGFuZWwlMjBoZWF0JTIwcHVtcCUyMHJlbm92YXRpb258ZW58MHx8fHwxNzkwMzkzMjU5fDA&ixlib=rb-4.1.0&q=85",
+    "french_countryside_house": "https://images.unsplash.com/photo-1779777847968-6e6ee105dcbd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHwyfHxmcmVuY2glMjBjb3VudHJ5JTIwaG91c2UlMjBjb3VudHJ5c2lkZSUyMGV4dGVyaW9yfGVufDB8fHx8MTc5MDM5MzI2NXww&ixlib=rb-4.1.0&q=85",
+    "solar_roof_installation": "https://images.unsplash.com/photo-1655300283247-6b1924b1d152?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTZ8MHwxfHNlYXJjaHwyfHxmcmVuY2glMjBob3VzZSUyMHNvbGFyJTIwcGFuZWwlMjBoZWF0JTIwcHVtcCUyMHJlbm92YXRpb258ZW58MHx8fHwxNzkwMzkzMjU5fDA&ixlib=rb-4.1.0&q=85",
+    "modern_house_heatpump": "https://images.unsplash.com/photo-1701422052265-64f0ac28dcd6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHxfHxtb2Rlcm4lMjBoZWF0JTIwcHVtcCUyMG91dGRvb3IlMjBpbnN0YWxsYXRpb24lMjBob21lfGVufDB8fHx8MTc5MDM5MzI2NXww&ixlib=rb-4.1.0&q=85"
+  },
+  "pages_and_navigation": [
+    {
+      "path": "/",
+      "name": "Accueil",
+      "key_features": [
+        "Hero with kinetic text reveal + clipped French home photography + floating 4-step eligibility wizard card",
+        "Editorial marquee ribbon for key figures (11 000€, MaPrimeRénov', CEE, RGE)",
+        "Aid cards grid (MaPrimeRénov', CEE, Aides Locales, Chèque Énergie)",
+        "4-step how-it-works process diagram",
+        "Equipment solutions grid (Système Solaire Combiné SSC, PAC Air/Eau, PAC Hybride, Isolation)",
+        "Editorial articles section",
+        "Reassurance banner clearly stating private editorial status + 2nd CTA"
+      ]
+    },
+    {
+      "path": "/aides",
+      "name": "Aides & Subventions",
+      "subpages": ["/aides/maprimerenov", "/aides/cee", "/aides/locales", "/aides/cheque-energie"]
+    },
+    {
+      "path": "/solutions",
+      "name": "Solutions Énergétiques",
+      "subpages": ["/solutions/solaire-thermique-ssc", "/solutions/pompe-a-chaleur-pac", "/solutions/isolation"]
+    },
+    {
+      "path": "/actualites",
+      "name": "Guide & Actualités"
+    },
+    {
+      "path": "/test-eligibilite",
+      "name": "Simulateur D'Éligibilité"
+    },
+    {
+      "path": "/a-propos",
+      "name": "À Propos"
+    },
+    {
+      "path": "/contact",
+      "name": "Contact"
+    },
+    {
+      "path": "/mentions-legales",
+      "name": "Mentions Légales"
+    },
+    {
+      "path": "/admin",
+      "name": "Espace Administration"
+    }
+  ],
+  "testing": {
+    "data_testid_convention": "All interactive elements, forms, step buttons, links, and cards MUST include data-testid attributes (e.g. data-testid='nav-eligibility-btn', data-testid='eligibility-step-1-next', data-testid='aid-card-maprimerenov')"
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Always maintain light ivory (#FAFAF7) and clean white backgrounds. Never use heavy dark gradients or neon modern colors.",
+    "Do NOT use Inter or Roboto for headings. Always use 'Cormorant Garamond' (serif) for headings and 'Plus Jakarta Sans' for body text.",
+    "Include the private editorial platform disclaimer in header, hero subtext, and footer to reinforce trust without impersonating government services.",
+    "Ensure every form and button contains explicit data-testid attributes for testing.",
+    "Smooth motion transitions using framer-motion and lenis are required across all interactive components."
+  ]
+}
